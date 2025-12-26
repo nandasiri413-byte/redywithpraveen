@@ -6,266 +6,253 @@
     <title>PRAVEEN'S CALENDAR</title>
     <style>
         :root {
-            --primary-red: #d32f2f;
-            --glass-bg: rgba(255, 255, 255, 0.15);
+            --primary-red: #ff3333;
+            --glass-bg: rgba(0, 0, 0, 0.4);
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
             background: url('https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=2000') no-repeat center center fixed;
             background-size: cover;
         }
 
-        /* Rain Drop Effect Canvas */
-        #rainCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
+        #weatherCanvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
         }
 
         .container {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            padding: 20px;
-            box-sizing: border-box;
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100vh; color: white; padding: 10px;
         }
 
         h1 {
             color: var(--primary-red);
-            font-size: 2.5rem;
-            margin-top: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 2.2rem; margin: 15px 0;
+            text-transform: uppercase; font-weight: 800;
         }
 
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            width: 90%;
-            max-width: 1200px;
-            margin-top: 20px;
+        /* Layout: Top Stats, Bottom Calendar */
+        .info-row {
+            display: flex; gap: 15px; width: 95%; max-width: 1000px;
+            margin-bottom: 20px;
         }
 
         .card {
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 15px; padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex: 1; text-align: center;
         }
 
-        /* Calendar Swipe Section */
-        #calendar-container {
-            overflow: hidden;
-            touch-action: pan-y;
-            position: relative;
-            min-height: 400px;
+        .time-large { font-size: 2.5rem; font-weight: bold; color: #fff; }
+
+        /* Calendar Styling */
+        .calendar-card {
+            width: 95%; max-width: 500px; height: 400px;
+            position: relative; overflow: hidden;
         }
 
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .calendar-page {
+            position: absolute; width: 100%; height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
         }
 
         .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            gap: 5px;
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 5px; padding: 10px;
         }
 
-        .day-name { font-weight: bold; color: #ffeb3b; }
-        .holiday { color: #ff5252; font-weight: bold; }
+        .day { padding: 10px; font-weight: bold; }
+        .sunday { color: var(--primary-red); }
+        .header-day { color: #ffeb3b; border-bottom: 1px solid #666; }
 
-        /* Weather & Time */
-        .info-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .time-box { font-size: 3rem; font-weight: bold; }
-        .date-box { font-size: 1.2rem; }
-        .weather-box { font-size: 1.5rem; }
-        
-        .world-clocks {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        /* Weather Status Label */
+        #weather-mode {
+            position: absolute; top: 10px; right: 20px;
+            font-weight: bold; color: #00d4ff; text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <canvas id="rainCanvas"></canvas>
+    <canvas id="weatherCanvas"></canvas>
+    <div id="weather-mode">Mode: Clear</div>
 
     <div class="container">
         <h1>PRAVEEN'S CALENDAR</h1>
 
-        <div class="dashboard">
-            <div class="card info-panel">
-                <div>
-                    <div id="colombo-time" class="time-box">00:00:00</div>
-                    <div id="current-date" class="date-box">Loading date...</div>
-                </div>
-                
-                <div class="weather-box">
-                    <strong>Sri Lanka Weather:</strong><br>
-                    <span id="weather-desc">Loading...</span> | <span id="temp">--</span>°C
-                </div>
-
-                <div class="world-clocks">
-                    <div>London: <span id="london-time">--:--</span></div>
-                    <div>New York: <span id="ny-time">--:--</span></div>
-                    <div>Tokyo: <span id="tokyo-time">--:--</span></div>
-                    <div>Dubai: <span id="dubai-time">--:--</span></div>
-                </div>
+        <div class="info-row">
+            <div class="card">
+                <div id="clock" class="time-large">00:00:00</div>
+                <div id="date-label">Date Loading...</div>
             </div>
-
-            <div class="card" id="calendar-container">
-                <div class="calendar-header">
-                    <button onclick="prevMonth()"><</button>
-                    <h2 id="month-year">Month Year</h2>
-                    <button onclick="nextMonth()">></button>
-                </div>
-                <div class="calendar-grid" id="calendar-body">
-                    </div>
-                <p style="text-align:center; font-size: 0.8rem; margin-top:10px;">(Swipe left/right to change month)</p>
+            <div class="card">
+                <div style="font-size: 1.2rem;">SRI LANKA</div>
+                <div id="weather-desc">Syncing...</div>
+                <div style="font-size: 1.8rem; font-weight: bold;"><span id="temp">29</span>°C</div>
             </div>
         </div>
+
+        <div class="card calendar-card" id="cal-box">
+            <div id="page-content" class="calendar-page">
+                </div>
+        </div>
+
+        <div style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">Swipe UP for next month</div>
     </div>
 
     <script>
-        // 1. Rain Effect
-        const canvas = document.getElementById('rainCanvas');
-        const ctx = canvas.getContext('2d');
-        let drops = [];
+        // --- 1. Audio Engine (Simulated Sounds) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
 
-        function initRain() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            for(let i=0; i<100; i++) {
-                drops.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*5+2, l: Math.random()*20+10});
+            if (type === 'rain') {
+                oscillator.type = 'browner'; // Simulated via noise
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 5);
+            } else if (type === 'flip') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
             }
         }
 
-        function drawRain() {
+        // --- 2. Weather Logic (Rain -> Snow -> Wind) ---
+        const canvas = document.getElementById('weatherCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mode = 'rain'; // rain, snow, wind
+
+        function initWeather() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    v: Math.random() * 5 + 2,
+                    l: Math.random() * 20 + 5
+                });
+            }
+        }
+
+        function drawWeather() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 1;
-            drops.forEach(d => {
+            document.getElementById('weather-mode').innerText = `Current: ${mode}`;
+            
+            ctx.strokeStyle = mode === 'snow' ? '#fff' : 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 2;
+
+            particles.forEach(p => {
                 ctx.beginPath();
-                ctx.moveTo(d.x, d.y);
-                ctx.lineTo(d.x, d.y + d.l);
+                if (mode === 'rain') {
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x, p.y + p.l);
+                } else if (mode === 'snow') {
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                } else if (mode === 'wind') {
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + p.l, p.y + 2);
+                }
                 ctx.stroke();
-                d.y += d.s;
-                if(d.y > canvas.height) d.y = -20;
+
+                p.y += (mode === 'snow' ? p.v/2 : p.v);
+                if (mode === 'wind') p.x += 10;
+                
+                if (p.y > canvas.height) p.y = -20;
+                if (p.x > canvas.width) p.x = -20;
             });
-            requestAnimationFrame(drawRain);
+            requestAnimationFrame(drawWeather);
         }
 
-        // 2. Clock & World Times
-        function updateClock() {
-            const now = new Date();
-            const options = { timeZone: 'Asia/Colombo', hour12: false };
-            document.getElementById('colombo-time').innerText = now.toLocaleTimeString('en-GB', options);
-            document.getElementById('current-date').innerText = now.toDateString();
+        // Switch modes every 5 seconds
+        setInterval(() => {
+            if (mode === 'rain') { mode = 'snow'; }
+            else if (mode === 'snow') { mode = 'wind'; }
+            else { mode = 'rain'; }
+            // In a real browser, sounds require user interaction first
+        }, 5000);
 
-            const world = [
-                {id: 'london-time', zone: 'Europe/London'},
-                {id: 'ny-time', zone: 'America/New_York'},
-                {id: 'tokyo-time', zone: 'Asia/Tokyo'},
-                {id: 'dubai-time', zone: 'Asia/Dubai'}
-            ];
-            world.forEach(city => {
-                document.getElementById(city.id).innerText = new Date().toLocaleTimeString('en-GB', {timeZone: city.zone, hour: '2-digit', minute:'2-digit'});
-            });
-        }
-
-        // 3. Calendar Logic (Up to 2030)
+        // --- 3. Calendar & Time ---
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
 
-        function renderCalendar(month, year) {
-            const body = document.getElementById('calendar-body');
-            const title = document.getElementById('month-year');
-            body.innerHTML = '';
-            
+        function updateClock() {
+            const colombo = new Date().toLocaleString("en-US", {timeZone: "Asia/Colombo"});
+            const d = new Date(colombo);
+            document.getElementById('clock').innerText = d.toLocaleTimeString('en-GB');
+            document.getElementById('date-label').innerText = d.toDateString();
+        }
+
+        function renderCalendar(m, y) {
+            const container = document.getElementById('page-content');
             const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            title.innerText = `${months[month]} ${year}`;
+            
+            let html = `<h2 style="color:#ffeb3b">${months[m]} ${y}</h2><div class="calendar-grid">`;
+            ['S','M','T','W','T','F','S'].forEach(day => html += `<div class="day header-day">${day}</div>`);
+            
+            const firstDay = new Date(y, m, 1).getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            days.forEach(d => body.innerHTML += `<div class="day-name">${d}</div>`);
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let i=0; i<firstDay; i++) body.innerHTML += '<div></div>';
-
+            for(let i=0; i<firstDay; i++) html += `<div></div>`;
             for(let d=1; d<=daysInMonth; d++) {
-                const dateObj = new Date(year, month, d);
-                const isSunday = dateObj.getDay() === 0;
-                const holidayClass = isSunday ? 'holiday' : '';
-                body.innerHTML += `<div class="${holidayClass}">${d}</div>`;
+                const isSun = new Date(y, m, d).getDay() === 0;
+                html += `<div class="day ${isSun ? 'sunday' : ''}">${d}</div>`;
             }
+            html += `</div>`;
+            container.innerHTML = html;
         }
 
-        function prevMonth() { 
-            if(currentYear === 2020 && currentMonth === 0) return;
-            currentMonth--; 
-            if(currentMonth < 0) { currentMonth = 11; currentYear--; }
-            renderCalendar(currentMonth, currentYear); 
-        }
+        // --- 4. Swipe Up Logic ---
+        let startY = 0;
+        const calBox = document.getElementById('cal-box');
 
-        function nextMonth() { 
-            if(currentYear === 2030 && currentMonth === 11) return;
-            currentMonth++; 
-            if(currentMonth > 11) { currentMonth = 0; currentYear++; }
-            renderCalendar(currentMonth, currentYear); 
-        }
-
-        // Swipe Detection
-        let touchstartX = 0;
-        let touchendX = 0;
-        document.getElementById('calendar-container').addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX);
-        document.getElementById('calendar-container').addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if (touchendX < touchstartX - 50) nextMonth();
-            if (touchendX > touchstartX + 50) prevMonth();
+        calBox.addEventListener('touchstart', e => startY = e.touches[0].clientY);
+        calBox.addEventListener('touchend', e => {
+            let endY = e.changedTouches[0].clientY;
+            if (startY - endY > 50) { // Swipe Up detected
+                playSound('flip');
+                const page = document.getElementById('page-content');
+                page.style.transform = 'translateY(-100%)';
+                
+                setTimeout(() => {
+                    currentMonth++;
+                    if(currentMonth > 11) { currentMonth = 0; currentYear++; }
+                    if(currentYear > 2030) return;
+                    renderCalendar(currentMonth, currentYear);
+                    page.style.transition = 'none';
+                    page.style.transform = 'translateY(100%)';
+                    setTimeout(() => {
+                        page.style.transition = 'transform 0.6s ease';
+                        page.style.transform = 'translateY(0)';
+                    }, 50);
+                }, 600);
+            }
         });
 
-        // 4. Dummy Weather (Requires API key for real data, using mock)
-        function fetchWeather() {
-            // In a real app, use fetch() with OpenWeatherMap API
-            document.getElementById('weather-desc').innerText = "Rainy / Cloudy";
-            document.getElementById('temp').innerText = "28";
-        }
-
-        // Init
-        initRain();
-        drawRain();
-        setInterval(updateClock, 1000);
+        // Initialize
+        initWeather();
+        drawWeather();
         renderCalendar(currentMonth, currentYear);
-        fetchWeather();
-        window.addEventListener('resize', initRain);
+        setInterval(updateClock, 1000);
+        window.addEventListener('resize', initWeather);
+
     </script>
 </body>
 </html>
