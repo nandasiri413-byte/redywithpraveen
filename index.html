@@ -1,305 +1,264 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRAVEEN'S CALENDAR</title>
+    <title>Praveen Induwara - Smart Dashboard</title>
     <style>
         :root {
-            --glass: rgba(0, 0, 0, 0.7);
-            --red-text: #ff0000;
+            --light-green: #adff2f;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --poya-yellow: #ffff00;
+            --holiday-red: #ff4444;
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            font-family: Arial, sans-serif;
             overflow: hidden;
-            background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2000') no-repeat center center fixed;
+            background: url('https://share.google/images/1zS8VJ8syUMigDVix') no-repeat center center fixed;
             background-size: cover;
             color: white;
         }
 
-        #overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+        /* Welcome Screen */
+        #welcome-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            cursor: pointer;
-            text-align: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 2000; transition: 0.5s;
         }
 
-        .canvas-layer {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 1;
+        #start-btn {
+            background: var(--light-green);
+            color: black; border: none; padding: 15px 50px;
+            font-size: 20px; font-weight: bold; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 0 20px var(--light-green);
         }
 
-        .main-content {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            height: 100vh;
-            box-sizing: border-box;
+        /* Main App Interface */
+        #app-interface { display: none; height: 100%; position: relative; }
+
+        .header-title {
+            text-align: center; color: var(--light-green);
+            font-size: 32px; padding-top: 20px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
-        h1 {
-            color: var(--red-text);
-            font-size: 2rem;
-            margin: 10px 0;
-            text-transform: uppercase;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+        /* Widgets Area */
+        .widget-row {
+            display: flex; justify-content: space-between;
+            padding: 20px 50px; margin-top: 10px;
         }
 
-        .info-section {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-            flex: 1;
-            text-align: center;
-        }
-
-        .time-large { font-size: 2.2rem; font-weight: bold; color: #00ffcc; }
-        
-        /* Calendar Styling */
-        .calendar-card {
-            width: 100%;
-            max-width: 450px;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            padding: 20px;
-            border-radius: 15px;
+        .weather-box, .time-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
-            touch-action: none; 
+            padding: 15px 25px; border-radius: 15px;
+            cursor: pointer; min-width: 140px; text-align: center;
+        }
+
+        /* Transparent Calendar */
+        .calendar-section {
+            width: 380px; height: 450px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            margin: 40px auto; border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.3);
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+        }
+        .calendar-section::-webkit-scrollbar { display: none; }
+
+        .month-page {
+            height: 450px; scroll-snap-align: start;
+            padding: 20px; box-sizing: border-box;
+            text-align: center;
         }
 
         .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            text-align: center;
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 10px; margin-top: 20px;
         }
 
-        .day-header { font-weight: bold; color: #ffd700; padding-bottom: 10px; font-size: 0.9rem; }
-        .day-cell { padding: 10px 0; border-radius: 5px; transition: 0.3s; }
-        .sunday { color: var(--red-text); font-weight: bold; }
-        .month-label { font-size: 1.4rem; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid gray; padding-bottom: 5px;}
+        .day-label { font-size: 12px; color: var(--light-green); font-weight: bold; }
+        .holiday { color: var(--holiday-red) !important; font-weight: bold; }
+        .poya { color: var(--poya-yellow) !important; font-weight: bold; text-decoration: underline; }
 
-        /* Environment Effects */
-        #wind-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            transition: background 3s, filter 3s;
-            z-index: 2;
+        /* Full Screen Weather Page */
+        #weather-detail-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://share.google/images/1zS8VJ8syUMigDVix') no-repeat center center;
+            background-size: cover; display: none; z-index: 3000;
         }
-        .wind-active { background: rgba(255, 255, 255, 0.05); filter: blur(3px); }
 
+        .weather-container {
+            height: 100%; display: flex; flex-direction: column;
+            background: rgba(0,0,0,0.4);
+        }
+
+        .search-area { padding: 30px; text-align: center; }
+        .search-input {
+            width: 80%; padding: 15px; border-radius: 30px; border: none;
+            background: rgba(255,255,255,0.9); font-size: 18px;
+        }
+
+        .weather-list {
+            flex-grow: 1; overflow-y: scroll;
+            padding: 0 40px 100px 40px;
+        }
+
+        .weather-card {
+            background: var(--glass-bg); backdrop-filter: blur(10px);
+            margin: 15px 0; padding: 20px; border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .back-btn {
+            position: absolute; bottom: 30px; right: 30px;
+            background: white; color: black; padding: 10px 30px;
+            border-radius: 20px; cursor: pointer; font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-<div id="overlay" onclick="startApp()">
-    <div>
-        <h1 style="color: white;">PRAVEEN'S CALENDAR</h1>
-        <p>TAP TO START EXPERIENCE</p>
+    <audio id="windSound" loop><source src="https://assets.mixkit.co/active_storage/sfx/2501/2501-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="flipSound"><source src="https://assets.mixkit.co/active_storage/sfx/2042/2042-preview.mp3" type="audio/mpeg"></audio>
+
+    <div id="welcome-overlay">
+        <h1 style="letter-spacing: 5px; margin-bottom: 30px;">AYUBOWAN</h1>
+        <button id="start-btn" onclick="initApp()">START</button>
     </div>
-</div>
 
-<canvas id="effectCanvas" class="canvas-layer"></canvas>
-<div id="wind-overlay"></div>
+    <div id="app-interface">
+        <h1 class="header-title">ᎮᏒᏗᏉᏋᏋᏁ ᎥᏁᎴᏬᏉᏗᏒᏗ'S</h1>
 
-<div class="main-content">
-    <h1>PRAVEEN'S CALENDAR</h1>
-
-    <div class="info-section">
-        <div class="card">
-            <div id="colombo-time" class="time-large">00:00:00</div>
-            <div style="font-size: 0.9rem;">Colombo, Sri Lanka</div>
-            <div id="world-clocks" style="font-size: 0.8rem; margin-top: 10px; color: #aaa;">
-                LON: <span id="lon-time"></span> | NY: <span id="ny-time"></span> | TOK: <span id="tok-time"></span>
+        <div class="widget-row">
+            <div class="weather-box" onclick="toggleWeather(true)">
+                <div style="font-size: 12px; opacity: 0.8;">SRI LANKA</div>
+                <div style="font-weight: bold;">WEATHER</div>
+            </div>
+            <div class="time-box">
+                <div id="live-time" style="font-size: 18px; font-weight: bold;">00:00:00</div>
+                <div style="font-size: 11px;">SRI LANKA TIME</div>
             </div>
         </div>
-        <div class="card">
-            <div style="font-size: 1rem;">Sri Lanka Weather</div>
-            <div id="weather-status" style="font-size: 1.2rem; color: #00ffcc;">Rainforest Humid</div>
-            <div style="font-size: 1.8rem;">29°C</div>
+
+        <div class="calendar-section" id="calScroll" onscroll="playFlip()">
+            <div id="calendar-content"></div>
         </div>
     </div>
 
-    <div class="calendar-card" id="cal-container">
-        <div id="month-title" class="month-label">Month Year</div>
-        <div class="calendar-grid" id="calendar-body"></div>
-        <p style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 15px;">
-            Swipe UP for Next Month | Swipe DOWN for Previous
-        </p>
+    <div id="weather-detail-page">
+        <div class="weather-container">
+            <div class="search-area">
+                <input type="text" id="citySearch" class="search-input" placeholder="Search District..." onkeyup="searchCity()">
+            </div>
+            <div class="weather-list" id="cityList">
+                </div>
+            <div class="back-btn" onclick="toggleWeather(false)">BACK</div>
+        </div>
     </div>
-</div>
 
-<audio id="snd-rain" loop src="https://www.soundjay.com/nature/rain-01.mp3"></audio>
-<audio id="snd-snow" loop src="https://www.soundjay.com/nature/wind-01.mp3"></audio>
-<audio id="snd-wind" loop src="https://www.soundjay.com/nature/wind-04.mp3"></audio>
-<audio id="snd-swipe" src="https://www.soundjay.com/human/page-flip-01.mp3"></audio>
+    <script>
+        const provinces = [
+            {name: "COLOMBO", temp: "31°C", wind: "12km/h"},
+            {name: "KANDY", temp: "24°C", wind: "8km/h"},
+            {name: "GALLE", temp: "29°C", wind: "15km/h"},
+            {name: "JAFFNA", temp: "32°C", wind: "18km/h"},
+            {name: "ANURADHAPURA", temp: "33°C", wind: "10km/h"},
+            {name: "NUWARA ELIYA", temp: "16°C", wind: "20km/h"},
+            {name: "RATNAPURA", temp: "30°C", wind: "5km/h"},
+            {name: "TRINCOMALEE", temp: "32°C", wind: "14km/h"},
+            {name: "MATARA", temp: "30°C", wind: "11km/h"},
+            {name: "BADULLA", temp: "25°C", wind: "9km/h"}
+        ];
 
-<script>
-    const canvas = document.getElementById('effectCanvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let mode = 'rain'; // Cycle: rain -> snow -> wind
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
-
-    function startApp() {
-        document.getElementById('overlay').style.display = 'none';
-        updateCycle();
-        setInterval(updateCycle, 5000); // 5-second cycle
-        setInterval(updateClocks, 1000);
-        renderCalendar(currentMonth, currentYear);
-        animate();
-    }
-
-    // Weather & Sound Cycle
-    function updateCycle() {
-        const rainSnd = document.getElementById('snd-rain');
-        const snowSnd = document.getElementById('snd-snow');
-        const windSnd = document.getElementById('snd-wind');
-        const windOverlay = document.getElementById('wind-overlay');
-
-        rainSnd.pause(); snowSnd.pause(); windSnd.pause();
-        windOverlay.classList.remove('wind-active');
-
-        if (mode === 'rain') {
-            mode = 'snow';
-            snowSnd.play();
-        } else if (mode === 'snow') {
-            mode = 'wind';
-            windSnd.play();
-            windOverlay.classList.add('wind-active');
-        } else {
-            mode = 'rain';
-            rainSnd.play();
+        function initApp() {
+            document.getElementById('welcome-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('welcome-overlay').style.display = 'none';
+                document.getElementById('app-interface').style.display = 'block';
+                document.getElementById('windSound').play();
+                generateCalendar();
+                loadWeather();
+                startClock();
+            }, 500);
         }
-        initParticles();
-    }
 
-    function initParticles() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        particles = [];
-        let count = mode === 'rain' ? 120 : 80;
-        for (let i = 0; i < count; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                v: Math.random() * 4 + 2,
-                l: Math.random() * 20 + 10,
-                r: Math.random() * 3 + 1
-            });
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('live-time').innerText = now.toLocaleTimeString('en-GB');
+            }, 1000);
         }
-    }
 
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(255,255,255,0.6)";
-        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        function toggleWeather(show) {
+            document.getElementById('weather-detail-page').style.display = show ? 'block' : 'none';
+        }
 
-        particles.forEach(p => {
-            if (mode === 'rain') {
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x, p.y + p.l);
-                ctx.stroke();
-                p.y += p.v * 2.5;
-            } else if (mode === 'snow') {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fill();
-                p.y += p.v * 0.6;
-                p.x += Math.sin(p.y / 30);
+        function loadWeather() {
+            const list = document.getElementById('cityList');
+            list.innerHTML = provinces.map(p => `
+                <div class="weather-card">
+                    <div>
+                        <div style="font-size: 20px; font-weight: bold;">${p.name}</div>
+                        <div style="font-size: 14px; opacity: 0.8;">SRI LANKA</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 24px; color: var(--light-green);">${p.temp}</div>
+                        <div style="font-size: 12px;">Wind: ${p.wind}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function searchCity() {
+            const filter = document.getElementById('citySearch').value.toUpperCase();
+            const cards = document.getElementsByClassName('weather-card');
+            for (let card of cards) {
+                const cityName = card.getElementsByTagName("div")[1].innerText;
+                card.style.display = cityName.toUpperCase().indexOf(filter) > -1 ? "" : "none";
             }
-            if (p.y > canvas.height) p.y = -20;
-            if (p.x > canvas.width) p.x = 0;
-            if (p.x < 0) p.x = canvas.width;
-        });
-        requestAnimationFrame(animate);
-    }
-
-    function updateClocks() {
-        const now = new Date();
-        document.getElementById('colombo-time').innerText = now.toLocaleTimeString('en-GB', {timeZone: 'Asia/Colombo'});
-        const opt = {hour:'2-digit', minute:'2-digit', hour12: false};
-        document.getElementById('lon-time').innerText = now.toLocaleTimeString('en-GB', {...opt, timeZone: 'Europe/London'});
-        document.getElementById('ny-time').innerText = now.toLocaleTimeString('en-GB', {...opt, timeZone: 'America/New_York'});
-        document.getElementById('tok-time').innerText = now.toLocaleTimeString('en-GB', {...opt, timeZone: 'Asia/Tokyo'});
-    }
-
-    function renderCalendar(m, y) {
-        const body = document.getElementById('calendar-body');
-        const title = document.getElementById('month-title');
-        body.innerHTML = '';
-        const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-        title.innerText = `${months[m]} ${y}`;
-
-        ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].forEach(d => {
-            body.innerHTML += `<div class="day-header">${d}</div>`;
-        });
-
-        const firstDay = new Date(y, m, 1).getDay();
-        const daysInMonth = new Date(y, m + 1, 0).getDate();
-
-        for (let i = 0; i < firstDay; i++) body.innerHTML += '<div></div>';
-
-        for (let d = 1; d <= daysInMonth; d++) {
-            const isSunday = new Date(y, m, d).getDay() === 0;
-            body.innerHTML += `<div class="day-cell ${isSunday ? 'sunday' : ''}">${d}</div>`;
         }
-    }
 
-    // VERTICAL SWIPE LOGIC (UP/DOWN)
-    let touchStartY = 0;
-    const calEl = document.getElementById('cal-container');
+        function playFlip() {
+            const flip = document.getElementById('flipSound');
+            flip.currentTime = 0;
+            flip.play();
+        }
 
-    calEl.addEventListener('touchstart', e => { touchStartY = e.changedTouches[0].screenY; });
-    calEl.addEventListener('touchend', e => {
-        let touchEndY = e.changedTouches[0].screenY;
-        let diffY = touchStartY - touchEndY;
+        function generateCalendar() {
+            const content = document.getElementById('calendar-content');
+            const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            let calHtml = "";
 
-        if (Math.abs(diffY) > 50) { 
-            if (diffY > 0) { // SWIPE UP -> NEXT MONTH
-                if (currentYear === 2030 && currentMonth === 11) return;
-                currentMonth++;
-                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-            } else { // SWIPE DOWN -> PREVIOUS MONTH
-                if (currentYear === 2020 && currentMonth === 0) return;
-                currentMonth--;
-                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            for (let year = 2024; year <= 2030; year++) {
+                for (let month = 0; month < 12; month++) {
+                    calHtml += `<div class="month-page">
+                        <h2 style="color: var(--light-green)">${months[month]} ${year}</h2>
+                        <div class="calendar-grid">
+                            <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
+                            <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div>
+                            <div class="day-label">S</div>`;
+                    
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        let cls = "";
+                        const dow = new Date(year, month, day).getDay();
+                        if (dow === 0) cls = "holiday"; // Sundays
+                        if (day === 15) cls = "poya";    // Mock Poya
+                        calHtml += `<div class="${cls}">${day}</div>`;
+                    }
+                    calHtml += `</div></div>`;
+                }
             }
-            document.getElementById('snd-swipe').currentTime = 0;
-            document.getElementById('snd-swipe').play();
-            renderCalendar(currentMonth, currentYear);
+            content.innerHTML = calHtml;
         }
-    });
-
-    window.addEventListener('resize', initParticles);
-</script>
+    </script>
 </body>
 </html>
