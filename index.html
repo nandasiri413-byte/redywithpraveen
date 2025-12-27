@@ -1,263 +1,279 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praveen Induwara - Smart Dashboard</title>
+    <title>Praveen Induwara Profile</title>
     <style>
         :root {
-            --light-green: #adff2f;
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --poya-yellow: #ffff00;
-            --holiday-red: #ff4444;
+            --glass: rgba(255, 255, 255, 0.2);
+            --light-green: #90EE90;
         }
 
         body, html {
-            margin: 0; padding: 0;
-            height: 100%; width: 100%;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100%;
             overflow: hidden;
             background: url('https://share.google/images/1zS8VJ8syUMigDVix') no-repeat center center fixed;
             background-size: cover;
             color: white;
         }
 
-        /* Welcome Screen */
-        #welcome-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 2000; transition: 0.5s;
+        /* Welcome Overlay */
+        #welcome-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
 
         #start-btn {
+            padding: 15px 40px;
+            font-size: 24px;
             background: var(--light-green);
-            color: black; border: none; padding: 15px 50px;
-            font-size: 20px; font-weight: bold; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 0 20px var(--light-green);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            color: black;
+            font-weight: bold;
         }
 
-        /* Main App Interface */
-        #app-interface { display: none; height: 100%; position: relative; }
-
+        /* Header */
         .header-title {
-            text-align: center; color: var(--light-green);
-            font-size: 32px; padding-top: 20px;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            text-align: center;
+            color: var(--light-green);
+            font-size: 2.5rem;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* Widgets Area */
-        .widget-row {
-            display: flex; justify-content: space-between;
-            padding: 20px 50px; margin-top: 10px;
+        /* Main Containers */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            height: 80vh;
         }
 
-        .weather-box, .time-box {
-            background: var(--glass-bg);
+        /* Weather and Time Widgets */
+        .top-widgets {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: absolute;
+            top: 100px;
+            padding: 0 50px;
+        }
+
+        .widget-box {
+            background: var(--glass);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 15px 25px; border-radius: 15px;
-            cursor: pointer; min-width: 140px; text-align: center;
-        }
-
-        /* Transparent Calendar */
-        .calendar-section {
-            width: 380px; height: 450px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            margin: 40px auto; border-radius: 25px;
+            padding: 15px;
+            border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.3);
-            overflow-y: scroll; scroll-snap-type: y mandatory;
-            scrollbar-width: none;
-        }
-        .calendar-section::-webkit-scrollbar { display: none; }
-
-        .month-page {
-            height: 450px; scroll-snap-align: start;
-            padding: 20px; box-sizing: border-box;
+            cursor: pointer;
+            min-width: 150px;
             text-align: center;
         }
 
-        .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-            gap: 10px; margin-top: 20px;
+        /* Calendar Styling */
+        .calendar-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            height: 400px;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.4);
+            overflow-y: scroll;
+            scrollbar-width: none; /* Firefox */
+        }
+        .calendar-container::-webkit-scrollbar { display: none; }
+
+        .month-view {
+            height: 100%;
+            padding: 20px;
+            text-align: center;
         }
 
-        .day-label { font-size: 12px; color: var(--light-green); font-weight: bold; }
-        .holiday { color: var(--holiday-red) !important; font-weight: bold; }
-        .poya { color: var(--poya-yellow) !important; font-weight: bold; text-decoration: underline; }
-
-        /* Full Screen Weather Page */
-        #weather-detail-page {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://share.google/images/1zS8VJ8syUMigDVix') no-repeat center center;
-            background-size: cover; display: none; z-index: 3000;
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
         }
 
-        .weather-container {
-            height: 100%; display: flex; flex-direction: column;
-            background: rgba(0,0,0,0.4);
-        }
+        .holiday { color: #ff4d4d; font-weight: bold; }
+        .poya { color: #ffff00; font-weight: bold; }
 
-        .search-area { padding: 30px; text-align: center; }
-        .search-input {
-            width: 80%; padding: 15px; border-radius: 30px; border: none;
-            background: rgba(255,255,255,0.9); font-size: 18px;
+        /* Weather Page Overlay */
+        #weather-page {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://share.google/images/1zS8VJ8syUMigDVix') no-repeat center center fixed;
+            background-size: cover;
+            display: none;
+            z-index: 500;
         }
 
         .weather-list {
-            flex-grow: 1; overflow-y: scroll;
-            padding: 0 40px 100px 40px;
+            height: 70vh;
+            overflow-y: scroll;
+            padding: 20px;
+            margin-top: 80px;
         }
 
-        .weather-card {
-            background: var(--glass-bg); backdrop-filter: blur(10px);
-            margin: 15px 0; padding: 20px; border-radius: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid rgba(255,255,255,0.1);
+        .search-bar {
+            width: 80%;
+            padding: 10px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255,255,255,0.8);
+        }
+
+        .weather-item {
+            background: var(--glass);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
         }
 
         .back-btn {
-            position: absolute; bottom: 30px; right: 30px;
-            background: white; color: black; padding: 10px 30px;
-            border-radius: 20px; cursor: pointer; font-weight: bold;
+            position: absolute;
+            top: 20px; left: 20px;
+            padding: 10px;
+            background: var(--light-green);
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <audio id="windSound" loop><source src="https://assets.mixkit.co/active_storage/sfx/2501/2501-preview.mp3" type="audio/mpeg"></audio>
-    <audio id="flipSound"><source src="https://assets.mixkit.co/active_storage/sfx/2042/2042-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="windSound" loop>
+        <source src="wind_ambient.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="flipSound">
+        <source src="page_flip.mp3" type="audio/mpeg">
+    </audio>
 
-    <div id="welcome-overlay">
-        <h1 style="letter-spacing: 5px; margin-bottom: 30px;">AYUBOWAN</h1>
-        <button id="start-btn" onclick="initApp()">START</button>
+    <div id="welcome-screen">
+        <h1 style="color: white; margin-bottom: 20px;">AYUBOWAN</h1>
+        <button id="start-btn" onclick="startApp()">START</button>
     </div>
 
-    <div id="app-interface">
+    <div id="main-content">
         <h1 class="header-title">ᎮᏒᏗᏉᏋᏋᏁ ᎥᏁᎴᏬᏉᏗᏒᏗ'S</h1>
 
-        <div class="widget-row">
-            <div class="weather-box" onclick="toggleWeather(true)">
-                <div style="font-size: 12px; opacity: 0.8;">SRI LANKA</div>
-                <div style="font-weight: bold;">WEATHER</div>
+        <div class="top-widgets">
+            <div class="widget-box" onclick="showWeather()">
+                <p>SRI LANKA</p>
+                <small>WEATHER</small>
             </div>
-            <div class="time-box">
-                <div id="live-time" style="font-size: 18px; font-weight: bold;">00:00:00</div>
-                <div style="font-size: 11px;">SRI LANKA TIME</div>
+            <div class="widget-box" id="clock-box">
+                <p id="time-display">00:00:00</p>
+                <small>SRI LANKA TIME</small>
             </div>
         </div>
 
-        <div class="calendar-section" id="calScroll" onscroll="playFlip()">
-            <div id="calendar-content"></div>
+        <div class="calendar-container" id="calendar" onscroll="playFlipSound()">
+            <div id="calendar-render"></div>
         </div>
     </div>
 
-    <div id="weather-detail-page">
-        <div class="weather-container">
-            <div class="search-area">
-                <input type="text" id="citySearch" class="search-input" placeholder="Search District..." onkeyup="searchCity()">
-            </div>
-            <div class="weather-list" id="cityList">
-                </div>
-            <div class="back-btn" onclick="toggleWeather(false)">BACK</div>
+    <div id="weather-page">
+        <button class="back-btn" onclick="hideWeather()">BACK</button>
+        <input type="text" class="search-bar" placeholder="Search Province..." id="weatherSearch" onkeyup="filterWeather()">
+        <div class="weather-list" id="weatherItems">
+            <div class="weather-item"><h3>COLOMBO</h3><p>Temp: 30°C | Wind: 10km/h</p></div>
+            <div class="weather-item"><h3>KANDY</h3><p>Temp: 24°C | Wind: 5km/h</p></div>
+            <div class="weather-item"><h3>GALLE</h3><p>Temp: 29°C | Wind: 15km/h</p></div>
+            <div class="weather-item"><h3>ANURADHAPURA</h3><p>Temp: 32°C | Wind: 8km/h</p></div>
+            <div class="weather-item"><h3>JAFFNA</h3><p>Temp: 31°C | Wind: 12km/h</p></div>
         </div>
     </div>
 
     <script>
-        const provinces = [
-            {name: "COLOMBO", temp: "31°C", wind: "12km/h"},
-            {name: "KANDY", temp: "24°C", wind: "8km/h"},
-            {name: "GALLE", temp: "29°C", wind: "15km/h"},
-            {name: "JAFFNA", temp: "32°C", wind: "18km/h"},
-            {name: "ANURADHAPURA", temp: "33°C", wind: "10km/h"},
-            {name: "NUWARA ELIYA", temp: "16°C", wind: "20km/h"},
-            {name: "RATNAPURA", temp: "30°C", wind: "5km/h"},
-            {name: "TRINCOMALEE", temp: "32°C", wind: "14km/h"},
-            {name: "MATARA", temp: "30°C", wind: "11km/h"},
-            {name: "BADULLA", temp: "25°C", wind: "9km/h"}
-        ];
-
-        function initApp() {
-            document.getElementById('welcome-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('welcome-overlay').style.display = 'none';
-                document.getElementById('app-interface').style.display = 'block';
-                document.getElementById('windSound').play();
-                generateCalendar();
-                loadWeather();
-                startClock();
-            }, 500);
+        // Start App and Music
+        function startApp() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            const wind = document.getElementById('windSound');
+            wind.volume = 0.4;
+            wind.play();
+            renderCalendar();
         }
 
-        function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('live-time').innerText = now.toLocaleTimeString('en-GB');
-            }, 1000);
+        // Real-time Clock
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time-display').innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+
+        // Weather Navigation
+        function showWeather() {
+            document.getElementById('weather-page').style.display = 'block';
         }
 
-        function toggleWeather(show) {
-            document.getElementById('weather-detail-page').style.display = show ? 'block' : 'none';
+        function hideWeather() {
+            document.getElementById('weather-page').style.display = 'none';
         }
 
-        function loadWeather() {
-            const list = document.getElementById('cityList');
-            list.innerHTML = provinces.map(p => `
-                <div class="weather-card">
-                    <div>
-                        <div style="font-size: 20px; font-weight: bold;">${p.name}</div>
-                        <div style="font-size: 14px; opacity: 0.8;">SRI LANKA</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 24px; color: var(--light-green);">${p.temp}</div>
-                        <div style="font-size: 12px;">Wind: ${p.wind}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function searchCity() {
-            const filter = document.getElementById('citySearch').value.toUpperCase();
-            const cards = document.getElementsByClassName('weather-card');
-            for (let card of cards) {
-                const cityName = card.getElementsByTagName("div")[1].innerText;
-                card.style.display = cityName.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        // Weather Search Filter
+        function filterWeather() {
+            let input = document.getElementById('weatherSearch').value.toUpperCase();
+            let items = document.getElementsByClassName('weather-item');
+            for (let i = 0; i < items.length; i++) {
+                let h3 = items[i].getElementsByTagName("h3")[0];
+                if (h3.innerHTML.toUpperCase().indexOf(input) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
             }
         }
 
-        function playFlip() {
+        // Sound on Scroll
+        function playFlipSound() {
             const flip = document.getElementById('flipSound');
             flip.currentTime = 0;
             flip.play();
         }
 
-        function generateCalendar() {
-            const content = document.getElementById('calendar-content');
-            const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-            let calHtml = "";
-
+        // Calendar Logic (Simplified for 2024-2030)
+        function renderCalendar() {
+            const render = document.getElementById('calendar-render');
+            let months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            
+            let html = "";
             for (let year = 2024; year <= 2030; year++) {
-                for (let month = 0; month < 12; month++) {
-                    calHtml += `<div class="month-page">
-                        <h2 style="color: var(--light-green)">${months[month]} ${year}</h2>
-                        <div class="calendar-grid">
-                            <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
-                            <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div>
-                            <div class="day-label">S</div>`;
-                    
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    for (let day = 1; day <= daysInMonth; day++) {
-                        let cls = "";
-                        const dow = new Date(year, month, day).getDay();
-                        if (dow === 0) cls = "holiday"; // Sundays
-                        if (day === 15) cls = "poya";    // Mock Poya
-                        calHtml += `<div class="${cls}">${day}</div>`;
+                for (let m = 0; m < 12; m++) {
+                    html += `<div class="month-view">
+                                <h3>${months[m]} ${year}</h3>
+                                <div class="days-grid">`;
+                    for (let d = 1; d <= 30; d++) {
+                        let style = "";
+                        if (d % 7 === 0) style = "holiday"; // Example Holiday
+                        if (d === 15) style = "poya";     // Example Poya
+                        html += `<span class="${style}">${d}</span>`;
                     }
-                    calHtml += `</div></div>`;
+                    html += `</div></div><hr style="opacity:0.2">`;
                 }
             }
-            content.innerHTML = calHtml;
+            render.innerHTML = html;
         }
     </script>
 </body>
